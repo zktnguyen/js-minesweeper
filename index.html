@@ -15,24 +15,24 @@
       <div class="ui huge header" >Minesweeper</div>
             <div class="ui small header">Dimensions</div>
             <div class="ui input">
-              <input type="number" value="9" id="dimensions" min="8" max="20">
+              <input type="number" id="dimensions" min="8" max="20">
             </div>
             <br /><br />
             <div class="ui small header">Bombs</div>
             <div class="ui input">
-              <input type="number" id="bombs" value="10" min="8" max="40">
+              <input type="number" id="bombs" min="8" max="40">
             </div>
             <br /><br />
             <button class="ui primary button" id="new-game">New Game</button>
             <button class="ui button" id="cheat">Cheat</button>
     </div>
-    <div class='col-md-6' id="board">
-      <div class="ui small header">Your Time: </div>
-
-      <div class="minefield">
-
-
+    <div class='col-md-8' id="board">
+      <div class='ui huge header'>
+        Placeholder for minesweeper gameboard
       </div>
+      <table class="minefield" border="1">
+
+      </table>
     </div>
   </div>
 

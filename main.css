@@ -8,6 +8,20 @@
 
 }
 
-.minefield td {
+td {
   padding: 0;
+  height: 33px;
+  width: 33px;
+  display: table-cell;
+  vertical-align: inherit;
+}
+
+tr {
+  border: 1px solid #ccc;
+    padding: 7px 10px;
+    width: 15px;
+    text-align: center;
+    cursor: pointer;
+    font: bold 16px arial;
+    background-color: #fffffa;
 }
