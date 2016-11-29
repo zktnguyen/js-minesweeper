@@ -29,7 +29,7 @@ $(document).ready(function(){
 
   // sets the mark of the field as a mine or flagged
   Field.prototype.setText = function(val){
-    var td = $('.minefield').find('<td id="' + this.el_id + '">');
+    var td = $('.minefield').find('td[id="' + this.el_id + '"]');
     td.removeClass("flag");
     switch(val){
       case "!":
@@ -37,7 +37,7 @@ $(document).ready(function(){
       case "?":
         td.addClass("flag");
         break;
-      case "X":
+      case "*":
         td.addClass("mine");
         break;
     }
@@ -73,13 +73,23 @@ $(document).ready(function(){
   };
 
   Field.prototype.reveal = function(){
-    return this.adjMines || this.isMine;
+    if (this.isMine) return;
+    this.setRevealed(true);
+    this.setText(this.adjMines);
+    if (this.adjMines === 0){
+      $.each(this.getAdj(), function(key, adj){
+        if (!adj.isRevealed)
+          adj.reveal();
+      });
+    }
+
   };
 
   var Board = function(dimensions, numMines){
-    // draw the board given the row and col dimensions
-    // plant the mines
-    // determines if the game is over
+    // builds the board array
+    // plants the mines
+    // connects all the fields (makes adjacency array)
+
     var row;
     this.board = [];
     this.dimensions = dimensions;
@@ -91,7 +101,17 @@ $(document).ready(function(){
       }
     }
     this.plantMines(numMines, dimensions);
+    this.connectFields();
   };
+
+    Board.prototype.connectFields = function(){
+      for (var x = 0; x < this.dimensions; x++){
+        for (var y = 0; y < this.dimensions; y++){
+          var curField = this.getField(x, y);
+          this.setAdjacent(curField);
+        }
+      }
+    };
 
     Board.prototype.drawBoard = function(dimensions){
       var tbody = $("<tbody>");
@@ -120,27 +140,66 @@ $(document).ready(function(){
         if (!this.board[x][y].isMine){
           this.board[x][y].setMine(true);
           mines++;
+          console.log("mine planted: " + x + '-' + y);
         }
       }
-    };
-
-    Board.prototype.setAdjacent = function(field){
-      var result = [], x = field.x, y=field.y;
-      for (var i = x-1; i < x+1; i++){
-        if (i < 0 || i >= this.dimensions) continue;
-        for (var j = y-1; j < y+1; x++){
-          if (j < 0 || j >= this.dimensions) continue;
-          if (y === j && x === i) continue;
-          result.push(this.getCell(i, j));
-        }
-      }
-      return result;
     };
 
     Board.prototype.getField = function(x,y){
       return this.board[y][x];
     };
 
+    Board.prototype.setAdjacent = function(field){
+      var result = [], x = field.x, y=field.y;
+      var curField = this.getField(x,y);
+      for(var i=x-1; i<=x+1; i++ ) {
+        if(i<0 || i>=this.dimensions)  continue;
+        for(var j=y-1; j<=y+1; j++) {
+          if(j<0 || j>=this.dimensions) continue;
+          if(y===j && x===i) continue;
+          curField.setAdj(this.getField(i,j));
+        }
+      }
+
+    };
+
+    Board.prototype.clickField = function(e){
+      var index = $(e.target).attr('id').split('-');
+      var x = Number(index[1]);
+      var y = Number(index[0]);
+      return this.getField(x,y);
+    };
+
+    Board.prototype.reveal = function(field){
+      if (field.isRevealed) return;
+      if (field.isMine){
+        this.revealMines();
+        Minesweeper.over();
+      }
+      else {
+        field.reveal();
+      }
+      /*
+      If the field is flagged or already revealed then we do nothing.
+If the field is a mine then we trigger gameover event.
+If the field is already revealed and clicked by user then
+we check if all surrounding mines are already flagged, if yes
+then we reveal all hidden surrounding fields.
+And finally we handle situation when user clicked on the empty field
+(no mines in surrounding). In this situation we recursively reveal all
+ empty fields in surrounding area.
+
+      */
+    };
+
+    Board.prototype.revealMines = function(){
+      for (var x = 0; x < this.dimensions; x++){
+        for (var y = 0; y < this.dimensions; y++){
+          var field = this.getField(x,y);
+          if(field.isMine) field.setText("*");
+        }
+      }
+    };
   var Minesweeper = {
     // deals with everything on the view.
     //Set default values of dimensions, num_mines
@@ -148,41 +207,43 @@ $(document).ready(function(){
     // initializes the board
     // interacts with the buttons (New Game, Reveal Mines)
     done: false,
-    timeElapsed: 0,
-    complete: function(){
+    time: 0,
+    board: {},
+    over: function(){
       this.done = true;
-
+      this.board.revealMines();
+      console.log("Noob");
     },
-    setDefaults: function() {
-      $('#dimensions').val(9);
-      $('#mines').val(10);
+    setDifficulty: function() {
+      $('#dimensions').val(4);
+      $('#mines').val(2);
     },
 
     start: function() {
       var dimensions = $('#dimensions').val();
       var numMines = $('#mines').val();
-      var board = new Board(dimensions,numMines);
-      board.drawBoard(dimensions);
+      this.board = new Board(dimensions,numMines);
+      this.board.drawBoard(dimensions);
     }
   };
 
 
-  Minesweeper.setDefaults();
+  Minesweeper.setDifficulty();
   Minesweeper.start();
   $(".minefield").click(function(e){
-    console.log($(e.target));
+    if (!Minesweeper.done){
+      var field = Minesweeper.board.clickField(e);
+      Minesweeper.board.reveal(field);
+    }
+
     return false;
   });
 
   $(".minefield").bind('contextmenu rightclick', function(e){
     e.preventDefault();
     console.log($(e.target));
+    // flag the current td
+
     return false;
   });
 });
-
-// (function($){
-//
-//
-//
-// }(jQuery));

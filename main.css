@@ -8,6 +8,9 @@
 
 }
 
+.mine {
+  color: red;
+}
 td {
   padding: 0;
   height: 33px;
