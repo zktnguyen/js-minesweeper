@@ -1,4 +1,4 @@
-$(document).ready(function(){
+(function($){
   var Field = function(x, y){
     this.x = x;
     this.y = y;
@@ -240,15 +240,15 @@ $(document).ready(function(){
     start: function() {
       var dimensions = $('#dimensions').val();
       var numMines = $('#mines').val();
+      this.done = false;
       this.board = new Board(dimensions,numMines);
       this.board.drawBoard(dimensions);
     }
 
   };
 
+$(function(){
 
-  Minesweeper.setDifficulty();
-  Minesweeper.start();
   $(".minefield").click(function(e){
     if (!Minesweeper.done){
       var field = Minesweeper.board.clickField(e);
@@ -281,4 +281,9 @@ $(document).ready(function(){
     confirm("Start new game?");
     Minesweeper.start();
   });
+
+  Minesweeper.setDifficulty();
+  Minesweeper.start();
 });
+
+}(jQuery));
