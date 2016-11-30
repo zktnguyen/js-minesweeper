@@ -33,6 +33,7 @@ $(document).ready(function(){
     td.removeClass("flag");
     switch(val){
       case "!":
+        td.addClass("flag");
         break;
       case "?":
         td.addClass("flag");
@@ -40,7 +41,14 @@ $(document).ready(function(){
       case "*":
         td.addClass("mine");
         break;
+      case "&nbsp;":
+        td.removeClass("flag");
+        break;
+      default:
+        td.addClass("empty");
+        break;
     }
+
     td.html(val);
     return this;
   };
@@ -78,11 +86,11 @@ $(document).ready(function(){
     this.setText(this.adjMines);
     if (this.adjMines === 0){
       $.each(this.getAdj(), function(key, adj){
-        if (!adj.isRevealed)
+        if (!adj.isRevealed){
           adj.reveal();
+        }
       });
     }
-
   };
 
   var Board = function(dimensions, numMines){
@@ -174,22 +182,27 @@ $(document).ready(function(){
       if (field.isRevealed) return;
       if (field.isMine){
         this.revealMines();
-        Minesweeper.over();
+        Minesweeper.over("lose");
       }
       else {
         field.reveal();
+        this.covered();
       }
-      /*
-      If the field is flagged or already revealed then we do nothing.
-If the field is a mine then we trigger gameover event.
-If the field is already revealed and clicked by user then
-we check if all surrounding mines are already flagged, if yes
-then we reveal all hidden surrounding fields.
-And finally we handle situation when user clicked on the empty field
-(no mines in surrounding). In this situation we recursively reveal all
- empty fields in surrounding area.
+    };
 
-      */
+    Board.prototype.covered = function(){
+      var num_uncovered = 0;
+      for (var x = 0; x < this.dimensions; x++){
+        for (var y= 0; y < this.dimensions; y++){
+          var field = this.getField(x, y);
+          if (!field.isRevealed && !field.isMine){
+            num_uncovered++;
+          }
+        }
+      }
+      if (!num_uncovered){
+        Minesweeper.over("won");
+      }
     };
 
     Board.prototype.revealMines = function(){
@@ -209,14 +222,19 @@ And finally we handle situation when user clicked on the empty field
     done: false,
     time: 0,
     board: {},
-    over: function(){
+    over: function(result){
       this.done = true;
       this.board.revealMines();
-      console.log("Noob");
+      if (result === "lose"){
+        $("#status").removeClass("ui disabled label").addClass("ui huge header").html("You lost!");
+      }
+      else if (result === "won"){
+        $("#status").removeClass("ui disabled label").addClass("ui huge header").html("You won!");
+      }
     },
     setDifficulty: function() {
-      $('#dimensions').val(4);
-      $('#mines').val(2);
+      $('#dimensions').val(9);
+      $('#mines').val(10);
     },
 
     start: function() {
@@ -225,6 +243,7 @@ And finally we handle situation when user clicked on the empty field
       this.board = new Board(dimensions,numMines);
       this.board.drawBoard(dimensions);
     }
+
   };
 
 
@@ -243,7 +262,23 @@ And finally we handle situation when user clicked on the empty field
     e.preventDefault();
     console.log($(e.target));
     // flag the current td
-
+    if (!Minesweeper.done){
+      var field = Minesweeper.board.clickField(e);
+      field.flagField();
+    }
     return false;
+  });
+
+  $("#reveal").click(function(e){
+    e.preventDefault();
+    if (!Minesweeper.done){
+      Minesweeper.board.revealMines();
+    }
+  });
+
+  $("#new-game").click(function(e){
+    e.preventDefault();
+    confirm("Start new game?");
+    Minesweeper.start();
   });
 });

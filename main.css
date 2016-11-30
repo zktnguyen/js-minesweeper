@@ -10,7 +10,17 @@
 
 .mine {
   color: red;
+  background-color: #808080;
 }
+
+.flag {
+  color: blue;
+  background-color: #C0C0C0;
+}
+.empty {
+  background-color: #C0C0C0;
+}
+
 td {
   padding: 0;
   height: 33px;
